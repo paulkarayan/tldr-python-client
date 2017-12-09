@@ -127,7 +127,8 @@ def have_recent_cache(command, platform):
         return False
 
 
-def get_page_for_platform(command, platform):
+def get_page_for_platform(command, platform=None, md=None):
+    print(md, type(md), "<----")
     data_downloaded = False
     if USE_CACHE and have_recent_cache(command, platform):
         data = load_page_from_cache(command, platform)
@@ -142,8 +143,9 @@ def get_page_for_platform(command, platform):
                 raise
     if data_downloaded:
         store_page_to_cache(data, command, platform)
-    return data.splitlines()
-
+    if not md:
+        return data.splitlines()
+    return data
 
 def download_and_store_page_for_platform(command, platform):
     page_url = remote + "/" + platform + "/" + quote(command) + ".md"
@@ -157,13 +159,13 @@ def get_platform():
             return os_directories[key]
 
 
-def get_page(command, platform=None):
+def get_page(command, md=None, platform=None):
     if platform is None:
         platform = ["common", get_platform()]
 
     for _platform in platform:
         try:
-            return get_page_for_platform(command, _platform)
+            return get_page_for_platform(command, _platform, md)
         except HTTPError as e:
             if e.code != 404:
                 raise
@@ -199,7 +201,7 @@ def colors_of(key):
 
 
 def output(page):
-    # Need a better fancy method?
+    #Need a better fancy method?
     if page is not None:
         for line in page:
             line = line.rstrip().decode('utf-8')
@@ -230,9 +232,9 @@ def output(page):
                     elements.append(item)
                 # Manually adding painted in blank spaces
                 elements.append(colored(' ' * (columns
-                                               - len(line)
-                                               - LEADING_SPACES_NUM
-                                               + replaced_spaces), *colors_of('blank')))
+                                            - len(line)
+                                            - LEADING_SPACES_NUM
+                                            + replaced_spaces), *colors_of('blank')))
                 print(''.join(elements))
             else:
                 cprint(line.ljust(columns), *colors_of('description'))
@@ -272,12 +274,19 @@ def main():
                         type=str,
                         choices=['linux', 'osx', 'sunos'],
                         help="Override the operating system [linux, osx, sunos]")
+    
+    parser.add_argument('-m', '--md',
+			default=False,	
+            help="return md directly for browser magic"
+    )
+
 
     options, other_options = parser.parse_known_args()
-
+    print(options, other_options, "***")
     if options.update_cache:
         update_cache()
         return
+    md = options.md
 
     parser.add_argument(
         'command', type=str, nargs='+', help="command to lookup")
@@ -286,13 +295,19 @@ def main():
 
     for command in options.command:
         try:
-            if options.os is not None:
+            if options.os is not None and not md:
                 output(get_page(command, options.os))
+            elif options.os is not None and md:
+                print(get_page(command, options.os, md))
+            elif md:
+                print(get_page(command, md))
             else:
                 output(get_page(command))
-        except Exception:
-            print("No internet connection detected. Please reconnect and try again.")
-
+            
+        except Exception as e:
+            print("Error. Do you have an internet connection problem? Please reconnect and try again.")
+            print(e)
 
 if __name__ == "__main__":
     main()
+
