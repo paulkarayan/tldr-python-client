@@ -128,7 +128,6 @@ def have_recent_cache(command, platform):
 
 
 def get_page_for_platform(command, platform=None, md=None):
-    print(md, type(md), "<----")
     data_downloaded = False
     if USE_CACHE and have_recent_cache(command, platform):
         data = load_page_from_cache(command, platform)
@@ -264,25 +263,30 @@ def update_cache():
 def main():
     parser = ArgumentParser(description="Python command line client for tldr")
 
-    parser.add_argument('-u', '--update_cache',
+    parser.add_argument('-u', 
+                        '--update_cache',
                         action='store_true',
-                        help="Update the cached commands")
+                        help="Update the cached commands"
+                        )
 
-    parser.add_argument('-o', '--os',
+    parser.add_argument('-o', 
+                        '--os',
                         nargs=1,
                         default=None,
                         type=str,
                         choices=['linux', 'osx', 'sunos'],
-                        help="Override the operating system [linux, osx, sunos]")
+                        help="Override the operating system [linux, osx, sunos]"
+                        )
     
-    parser.add_argument('-m', '--md',
-			default=False,	
-            help="return md directly for browser magic"
-    )
+    parser.add_argument('-m', 
+                        '--md',
+			            default=False,	
+                        help="return markdown file directly for browser magic"
+                        )
 
 
     options, other_options = parser.parse_known_args()
-    print(options, other_options, "***")
+
     if options.update_cache:
         update_cache()
         return
